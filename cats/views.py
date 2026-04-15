@@ -1,35 +1,79 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import Cat
 from .serializers import CatSerializer
 
 
-@api_view(['GET', 'POST'])
-def cat_list(request):
-    if request.method == 'POST':
+class APIcats(APIView):
+    def get(self, request):
+        cat = Cat.objects.all()
+        serializer = CatSerializer(cat, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request):
         serializer = CatSerializer(data=request.data, many=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    cats = Cat.objects.all()
-    serializer = CatSerializer(cats, many=True)
-    return Response(serializer.data)
 
 
-@api_view(['GET', 'POST', 'PATCH', 'PUT'])
-def cat_detail(request, pk):
-    cat = Cat.objects.get(id=pk)
-    if request.method == 'PUT' or request.method == 'PATCH':
+class APICatsDetail(APIView):
+    def get(self, request, pk):
+        cat = Cat.objects.get(id=pk)
+        serializer = CatSerializer(cat)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def patch(self, request, pk):
+        cat = Cat.objects.get(id=request.pk)
         serializer = CatSerializer(cat, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    if request.method == 'DELETE':
+
+    def put(self, request, pk):
+        cat = Cat.objects.get(id=request.pk)
+        serializer = CatSerializer(cat, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        cat = Cat.objects.get(id=request.pk)
         cat.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    serializer = CatSerializer(cat)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+# @api_view(['GET', 'POST'])
+# def cat_list(request):
+#     if request.method == 'POST':
+#         serializer = CatSerializer(data=request.data, many=True)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#     cats = Cat.objects.all()
+#     serializer = CatSerializer(cats, many=True)
+#     return Response(serializer.data)
+
+
+# @api_view(['GET', 'POST', 'PATCH', 'PUT'])
+# def cat_detail(request, pk):
+#     cat = Cat.objects.get(id=pk)
+#     if request.method == 'PUT' or request.method == 'PATCH':
+#         serializer = CatSerializer(cat, data=request.data, partial=True)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#     if request.method == 'DELETE':
+#         cat.delete()
+#         return Response(status=status.HTTP_204_NO_CONTENT)
+#     serializer = CatSerializer(cat)
+#     return Response(serializer.data, status=status.HTTP_200_OK)
